@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: llm_auditor_backend
+    restart: unless-stopped
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - DEBUG=${DEBUG:-false}
+      - ANALYZER_MODEL=${ANALYZER_MODEL:-claude-sonnet-4-6}
+      - FAST_ANALYZER_MODEL=${FAST_ANALYZER_MODEL:-claude-haiku-4-5-20251001}
+      - DATABASE_URL=sqlite+aiosqlite:////app/data/security_auditor.db
+      - ALLOWED_ORIGINS=["http://localhost", "http://localhost:80"]
+    volumes:
+      - auditor_data:/app/data
+      - auditor_reports:/app/reports/output
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    container_name: llm_auditor_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  auditor_data:
+  auditor_reports:

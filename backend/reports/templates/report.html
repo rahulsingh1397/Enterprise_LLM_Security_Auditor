@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLM Security Audit Report — {{ company_name }}</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 14px; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #ffffff;
+      color: #1a1a2e;
+      line-height: 1.6;
+    }
+
+    /* ── Print ────────────────────────────────────────────────────── */
+    @media print {
+      .no-print { display: none !important; }
+      .page-break { page-break-before: always; }
+      body { font-size: 12px; }
+      .cover { page-break-after: always; }
+    }
+
+    /* ── Layout ───────────────────────────────────────────────────── */
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 32px; }
+    section { margin-bottom: 48px; }
+    h1 { font-size: 2rem; font-weight: 700; }
+    h2 { font-size: 1.4rem; font-weight: 600; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 20px; }
+    h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 12px; }
+    p { margin-bottom: 12px; }
+
+    /* ── Cover Page ───────────────────────────────────────────────── */
+    .cover {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 60px 64px;
+      background: linear-gradient(135deg, #0d1117 0%, #161b22 60%, #1a2332 100%);
+      color: #ffffff;
+    }
+    .cover-header { display: flex; align-items: center; gap: 16px; }
+    .cover-logo {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, #f85149, #d29922);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem;
+    }
+    .cover-brand { font-size: 1rem; color: #8b949e; letter-spacing: 0.05em; text-transform: uppercase; }
+    .cover-body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .cover-tag {
+      display: inline-block;
+      background: rgba(248,81,73,0.15);
+      border: 1px solid rgba(248,81,73,0.4);
+      color: #f85149;
+      border-radius: 4px;
+      padding: 4px 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 24px;
+    }
+    .cover-title { font-size: 3rem; font-weight: 800; line-height: 1.15; margin-bottom: 8px; }
+    .cover-company { font-size: 1.5rem; color: #58a6ff; margin-bottom: 40px; }
+    .cover-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .meta-item label { font-size: 0.7rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 4px; }
+    .meta-item span { font-size: 0.95rem; color: #e6edf3; }
+    .cover-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 32px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .cover-footer-left { color: #8b949e; font-size: 0.8rem; }
+    .cover-footer-right { color: #8b949e; font-size: 0.8rem; text-align: right; }
+
+    /* ── Risk Score Gauge ─────────────────────────────────────────── */
+    .risk-banner {
+      background: #0d1117;
+      border-radius: 16px;
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      margin-bottom: 32px;
+    }
+    .gauge-wrap { position: relative; width: 160px; flex-shrink: 0; }
+    .gauge-wrap svg { width: 160px; height: 90px; overflow: visible; }
+    .gauge-score {
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+    .gauge-score .number { font-size: 2.4rem; font-weight: 800; color: {{ risk_color }}; line-height: 1; }
+    .gauge-score .label { font-size: 0.7rem; color: #8b949e; }
+    .risk-stats { flex: 1; color: #e6edf3; }
+    .risk-level-badge {
+      display: inline-block;
+      padding: 4px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 1rem;
+      background: {{ risk_color }}22;
+      color: {{ risk_color }};
+      border: 1px solid {{ risk_color }}66;
+      margin-bottom: 16px;
+    }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .stat-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 12px 16px;
+      text-align: center;
+    }
+    .stat-card .num { font-size: 1.8rem; font-weight: 700; }
+    .stat-card .lbl { font-size: 0.7rem; color: #8b949e; text-transform: uppercase; }
+    .stat-card.vuln .num { color: #f85149; }
+    .stat-card.pass .num { color: #3fb950; }
+    .stat-card.total .num { color: #58a6ff; }
+
+    /* ── Severity Pills ───────────────────────────────────────────── */
+    .pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .pill-critical { background: #f8514922; color: #f85149; border: 1px solid #f8514966; }
+    .pill-high     { background: #d2992222; color: #d29922; border: 1px solid #d2992266; }
+    .pill-medium   { background: #388bfd22; color: #388bfd; border: 1px solid #388bfd66; }
+    .pill-low      { background: #3fb95022; color: #3fb950; border: 1px solid #3fb95066; }
+    .pill-info     { background: #8b949e22; color: #8b949e; border: 1px solid #8b949e66; }
+
+    /* ── Severity Bar Chart ───────────────────────────────────────── */
+    .sev-chart { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+    .sev-row { display: flex; align-items: center; gap: 12px; }
+    .sev-row .sev-label { width: 64px; font-size: 0.75rem; font-weight: 600; }
+    .sev-row .sev-bar-bg { flex: 1; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
+    .sev-row .sev-bar-fill { height: 100%; border-radius: 5px; }
+    .sev-row .sev-count { width: 24px; text-align: right; font-size: 0.8rem; font-weight: 700; }
+
+    /* ── Findings Table ───────────────────────────────────────────── */
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    thead tr { background: #f8fafc; }
+    th { padding: 10px 12px; text-align: left; font-weight: 600; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #e2e8f0; }
+    td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+    tr:hover td { background: #f8fafc; }
+    .vuln-row td:first-child { border-left: 3px solid #f85149; }
+
+    /* ── Finding Detail Cards ─────────────────────────────────────── */
+    .finding-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .finding-card.critical { border-left: 4px solid #f85149; }
+    .finding-card.high     { border-left: 4px solid #d29922; }
+    .finding-card.medium   { border-left: 4px solid #388bfd; }
+    .finding-card.low      { border-left: 4px solid #3fb950; }
+    .finding-header {
+      background: #f8fafc;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .finding-header h4 { font-size: 0.95rem; font-weight: 600; flex: 1; }
+    .finding-body { padding: 16px 20px; }
+    .finding-section { margin-bottom: 14px; }
+    .finding-section label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; display: block; margin-bottom: 4px; }
+    .code-block {
+      background: #0d1117;
+      color: #e6edf3;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .evidence-block {
+      background: #fff8f0;
+      border-left: 3px solid #d29922;
+      padding: 8px 14px;
+      border-radius: 0 6px 6px 0;
+      font-style: italic;
+      font-size: 0.85rem;
+      color: #92400e;
+    }
+    .rec-block {
+      background: #f0fdf4;
+      border-left: 3px solid #3fb950;
+      padding: 8px 14px;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.85rem;
+      color: #166534;
+    }
+
+    /* ── Executive Summary ────────────────────────────────────────── */
+    .summary-box {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 24px;
+      border-left: 4px solid #58a6ff;
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    /* ── Category Sections ────────────────────────────────────────── */
+    .category-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px 16px;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    .category-icon { font-size: 1.4rem; }
+    .category-header h3 { margin: 0; }
+    .category-stats { margin-left: auto; font-size: 0.8rem; color: #64748b; }
+
+    /* ── Recommendations ──────────────────────────────────────────── */
+    .rec-list { list-style: none; }
+    .rec-list li {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 14px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .rec-list li:last-child { border-bottom: none; }
+    .rec-num {
+      width: 28px; height: 28px;
+      background: #0d1117;
+      color: #58a6ff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .rec-content strong { display: block; font-size: 0.9rem; margin-bottom: 4px; }
+    .rec-content p { font-size: 0.85rem; color: #64748b; margin: 0; }
+
+    /* ── Footer ───────────────────────────────────────────────────── */
+    .report-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 2px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+
+    /* ── Print Button ─────────────────────────────────────────────── */
+    .print-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      z-index: 1000;
+    }
+    .print-btn:hover { background: #161b22; border-color: #58a6ff; color: #58a6ff; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════ COVER PAGE -->
+<div class="cover">
+  <div class="cover-header">
+    <div class="cover-logo">🛡️</div>
+    <div>
+      <div style="font-size:1.1rem;font-weight:700;">Enterprise LLM Security Auditor</div>
+      <div class="cover-brand">Confidential Security Assessment</div>
+    </div>
+  </div>
+
+  <div class="cover-body">
+    <div class="cover-tag">Security Audit Report</div>
+    <h1 class="cover-title">LLM Application<br/>Security Assessment</h1>
+    <div class="cover-company">{{ company_name }}</div>
+
+    <div class="cover-meta">
+      <div class="meta-item">
+        <label>Report Date</label>
+        <span>{{ report_date }}</span>
+      </div>
+      <div class="meta-item">
+        <label>Reviewed By</label>
+        <span>{{ reviewer_name }}</span>
+      </div>
+      <div class="meta-item">
+        <label>Risk Score</label>
+        <span style="color:{{ risk_color }};font-weight:700;font-size:1.2rem;">{{ risk_score }}/100 — {{ risk_level }}</span>
+      </div>
+      <div class="meta-item">
+        <label>Audit ID</label>
+        <span style="font-family:monospace;font-size:0.8rem;">{{ audit_id }}</span>
+      </div>
+      <div class="meta-item">
+        <label>Target Model</label>
+        <span>{{ target_model }} ({{ target_provider }})</span>
+      </div>
+      <div class="meta-item">
+        <label>Tests Executed</label>
+        <span>{{ total_tests }} adversarial tests</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cover-footer">
+    <div class="cover-footer-left">
+      <strong>CONFIDENTIAL</strong><br/>
+      This report contains sensitive security findings and is intended<br/>
+      solely for authorized recipients of {{ company_name }}.
+    </div>
+    <div class="cover-footer-right">
+      Enterprise LLM Security Auditor<br/>
+      Prepared by: {{ reviewer_name }}<br/>
+      {{ report_date }}
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ MAIN REPORT -->
+<div class="container">
+
+  <!-- ── Risk Score Overview ─────────────────────────────────────── -->
+  <section>
+    <h2>Overall Risk Assessment</h2>
+    <div class="risk-banner">
+      <div class="gauge-wrap">
+        {% set angle = (risk_score / 100) * 180 %}
+        <svg viewBox="0 0 160 90" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background arc -->
+          <path d="M 10 80 A 70 70 0 0 1 150 80" fill="none" stroke="#30363d" stroke-width="12" stroke-linecap="round"/>
+          <!-- Score arc -->
+          <path d="M 10 80 A 70 70 0 0 1 150 80" fill="none" stroke="{{ risk_color }}" stroke-width="12" stroke-linecap="round"
+            stroke-dasharray="{{ (angle / 180) * 219.9 | round(1) }} 219.9"/>
+          <!-- Severity zones -->
+          <text x="8" y="95" font-size="9" fill="#3fb950">Low</text>
+          <text x="66" y="20" font-size="9" fill="#d29922" text-anchor="middle">Med</text>
+          <text x="138" y="95" font-size="9" fill="#f85149" text-anchor="end">Crit</text>
+        </svg>
+        <div class="gauge-score">
+          <div class="number">{{ risk_score | int }}</div>
+          <div class="label">/ 100</div>
+        </div>
+      </div>
+
+      <div class="risk-stats">
+        <div class="risk-level-badge">{{ risk_level }} Risk</div>
+        <div class="stat-grid">
+          <div class="stat-card total">
+            <div class="num">{{ total_tests }}</div>
+            <div class="lbl">Tests Run</div>
+          </div>
+          <div class="stat-card vuln">
+            <div class="num">{{ vulnerabilities_found }}</div>
+            <div class="lbl">Vulnerabilities</div>
+          </div>
+          <div class="stat-card pass">
+            <div class="num">{{ tests_passed }}</div>
+            <div class="lbl">Tests Passed</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Severity breakdown -->
+    <h3>Vulnerability Severity Breakdown</h3>
+    <div class="sev-chart">
+      {% set max_count = [severity_counts.critical, severity_counts.high, severity_counts.medium, severity_counts.low, severity_counts.info, 1] | max %}
+      {% for sev, color in [('critical','#f85149'),('high','#d29922'),('medium','#388bfd'),('low','#3fb950'),('info','#8b949e')] %}
+      <div class="sev-row">
+        <span class="sev-label">{{ sev | capitalize }}</span>
+        <div class="sev-bar-bg">
+          <div class="sev-bar-fill" style="width:{{ ((severity_counts[sev] / max_count) * 100) | round }}%;background:{{ color }};"></div>
+        </div>
+        <span class="sev-count" style="color:{{ color }};">{{ severity_counts[sev] }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- ── Executive Summary ──────────────────────────────────────── -->
+  <section>
+    <h2>Executive Summary</h2>
+    <div class="summary-box">{{ summary }}</div>
+  </section>
+
+  <!-- ── Audit Scope ────────────────────────────────────────────── -->
+  <section>
+    <h2>Audit Scope & Methodology</h2>
+    <table>
+      <tr><th style="width:200px">Parameter</th><th>Value</th></tr>
+      <tr><td>Target Organization</td><td><strong>{{ company_name }}</strong></td></tr>
+      <tr><td>Target Provider</td><td>{{ target_provider | capitalize }}</td></tr>
+      <tr><td>Target Model</td><td><code>{{ target_model }}</code></td></tr>
+      <tr><td>Target Endpoint</td><td><code>{{ target_url }}</code></td></tr>
+      <tr><td>Audit Conducted By</td><td>{{ reviewer_name }}</td></tr>
+      <tr><td>Audit Date</td><td>{{ report_date }}</td></tr>
+      <tr><td>Audit ID</td><td><code>{{ audit_id }}</code></td></tr>
+      <tr><td>Total Test Cases</td><td>{{ total_tests }} automated adversarial probes</td></tr>
+      <tr><td>Test Categories</td><td>Prompt Injection · System Prompt Leakage · Data Leakage · Jailbreak · PII Exposure · RAG Security</td></tr>
+    </table>
+  </section>
+
+  <!-- ── Vulnerability Summary Table ───────────────────────────── -->
+  {% if vuln_findings %}
+  <section>
+    <h2>Confirmed Vulnerabilities ({{ vuln_findings | length }})</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Vulnerability</th>
+          <th>Category</th>
+          <th>Severity</th>
+          <th>Confidence</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in vuln_findings %}
+        <tr class="vuln-row">
+          <td>{{ loop.index }}</td>
+          <td><strong>{{ f.attack_name }}</strong></td>
+          <td>{{ f.category | replace('_', ' ') | title }}</td>
+          <td><span class="pill pill-{{ f.severity }}">{{ f.severity }}</span></td>
+          <td>{{ f.confidence }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  <!-- ── Detailed Findings ──────────────────────────────────────── -->
+  {% if vuln_findings %}
+  <section class="page-break">
+    <h2>Detailed Findings</h2>
+    {% for f in vuln_findings %}
+    <div class="finding-card {{ f.severity }}">
+      <div class="finding-header">
+        <h4>{{ loop.index }}. {{ f.attack_name }}</h4>
+        <span class="pill pill-{{ f.severity }}">{{ f.severity }}</span>
+        <span style="font-size:0.75rem;color:#64748b;">Confidence: {{ f.confidence }}%</span>
+      </div>
+      <div class="finding-body">
+        <div class="finding-section">
+          <label>Category</label>
+          <p>{{ f.category | replace('_', ' ') | title }} › {{ f.scanner_name }}</p>
+        </div>
+        <div class="finding-section">
+          <label>Attack Prompt</label>
+          <div class="code-block">{{ f.attack_prompt }}</div>
+        </div>
+        {% if f.evidence %}
+        <div class="finding-section">
+          <label>Evidence (Response Excerpt)</label>
+          <div class="evidence-block">{{ f.evidence }}</div>
+        </div>
+        {% endif %}
+        <div class="finding-section">
+          <label>Analysis</label>
+          <p>{{ f.explanation }}</p>
+        </div>
+        <div class="finding-section">
+          <label>Recommendation</label>
+          <div class="rec-block">{{ f.recommendation }}</div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <!-- ── Recommendations ────────────────────────────────────────── -->
+  <section class="page-break">
+    <h2>Remediation Recommendations</h2>
+    {% set recs = [] %}
+    {% for f in vuln_findings %}
+      {% if f.recommendation not in recs %}
+        {% set _ = recs.append(f.recommendation) %}
+      {% endif %}
+    {% endfor %}
+    {% if recs %}
+    <ul class="rec-list">
+      {% for rec in recs %}
+      <li>
+        <div class="rec-num">{{ loop.index }}</div>
+        <div class="rec-content">
+          <strong>Finding: {{ vuln_findings[loop.index - 1].attack_name if loop.index <= vuln_findings|length else '' }}</strong>
+          <p>{{ rec }}</p>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p style="color:#3fb950;font-weight:600;">✓ No vulnerabilities detected. No remediation required.</p>
+    {% endif %}
+  </section>
+
+  <!-- ── All Tests (Appendix) ──────────────────────────────────── -->
+  <section class="page-break">
+    <h2>Appendix: All Test Results</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Test Name</th>
+          <th>Scanner</th>
+          <th>Result</th>
+          <th>Severity</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set all_findings = vuln_findings + safe_findings %}
+        {% for f in all_findings | sort(attribute='scanner_name') %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ f.attack_name }}</td>
+          <td>{{ f.scanner_name }}</td>
+          <td>
+            {% if f.vulnerable %}
+              <span style="color:#f85149;font-weight:600;">⚠ VULNERABLE</span>
+            {% else %}
+              <span style="color:#3fb950;font-weight:600;">✓ SAFE</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if f.vulnerable %}
+              <span class="pill pill-{{ f.severity }}">{{ f.severity }}</span>
+            {% else %}
+              —
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── Footer ─────────────────────────────────────────────────── -->
+  <div class="report-footer">
+    <div>
+      <strong>{{ company_name }}</strong> — LLM Security Audit<br/>
+      Audit ID: {{ audit_id }}
+    </div>
+    <div style="text-align:right;">
+      Reviewed by: <strong>{{ reviewer_name }}</strong><br/>
+      {{ report_date }} · Enterprise LLM Security Auditor
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<button class="print-btn no-print" onclick="window.print()">🖨 Print / Save PDF</button>
+
+</body>
+</html>
