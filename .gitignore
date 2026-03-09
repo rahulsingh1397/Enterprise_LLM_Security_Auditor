@@ -41,3 +41,21 @@ Thumbs.db
 
 # Docker
 docker/data/
+
+# Claude Code session data
+.claude/
+
+# Logs
+*.log
+logs/
+
+# Test / Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Secrets & certs
+*.pem
+*.key
+*.cert
+secrets/
