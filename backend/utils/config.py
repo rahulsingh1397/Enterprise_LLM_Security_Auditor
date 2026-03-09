@@ -49,5 +49,30 @@ class Settings(BaseSettings):
     MAX_CONCURRENT_ATTACKS: int = 5
     ANALYZER_TEMPERATURE: float = 0.1
 
+    # ── JWT Auth ─────────────────────────────────────────────────────────────
+    JWT_SECRET_KEY: str = "change-me-in-production-use-a-long-random-string"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440   # 24h
+    AUTH_ENABLED: bool = False   # Set True to require login
+
+    # ── Email notifications ──────────────────────────────────────────────────
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    SMTP_FROM: str = "auditor@llmsecurity.ai"
+    NOTIFY_ON_CRITICAL: bool = True
+
+    # ── Dynamic attack generation ────────────────────────────────────────────
+    DYNAMIC_ATTACKS_ENABLED: bool = False   # Uses extra Claude API calls
+    DYNAMIC_ATTACKS_PER_SCAN: int = 5
+
+    # ── Encryption key for sensitive DB fields ───────────────────────────────
+    FIELD_ENCRYPTION_KEY: Optional[str] = None   # Fernet key (base64)
+
+    # ── Tier / Rate limiting ─────────────────────────────────────────────────
+    FREE_TIER_AUDITS_PER_MONTH: int = 5
+    TIER_ENFORCEMENT: bool = False
+
 
 settings = Settings()

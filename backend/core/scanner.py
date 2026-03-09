@@ -10,6 +10,7 @@ from typing import AsyncGenerator, Callable, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.analyzer import analyze_response
+from backend.core.dynamic_attacks import generate_dynamic_attacks
 from backend.core.llm_client import TargetLLMClient
 from backend.core.risk_scorer import (
     calculate_risk_score,
@@ -26,6 +27,7 @@ from backend.scanners.prompt_injection import PromptInjectionScanner
 from backend.scanners.rag_security import RAGSecurityScanner
 from backend.scanners.system_prompt import SystemPromptScanner
 from backend.utils.config import settings
+from backend.utils.email import send_audit_complete_alert, send_critical_finding_alert
 from backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -41,8 +43,9 @@ _SCANNER_REGISTRY = {
 
 
 class AuditOrchestrator:
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession, notify_email: Optional[str] = None):
         self.db = db
+        self.notify_email = notify_email
 
     async def run(
         self,
@@ -69,6 +72,22 @@ class AuditOrchestrator:
             for scanner in scanners
             for attack in scanner.attacks
         ]
+
+        # Inject dynamic Claude-generated attacks if enabled
+        if settings.DYNAMIC_ATTACKS_ENABLED:
+            dynamic = await generate_dynamic_attacks(
+                system_prompt_hint=request.target.system_prompt_hint,
+                company_name=request.company_name,
+                scan_categories=request.scan_categories,
+                count=settings.DYNAMIC_ATTACKS_PER_SCAN,
+            )
+            if dynamic:
+                # Use first matching scanner for dynamic attacks; fallback to prompt injection
+                default_scanner = scanners[0] if scanners else PromptInjectionScanner()
+                for d_attack in dynamic:
+                    all_attack_prompts.append((default_scanner, d_attack))
+                logger.info("Added %d dynamic attacks", len(dynamic))
+
         total = len(all_attack_prompts)
         record.total_tests = total
         await self.db.commit()
@@ -122,6 +141,17 @@ class AuditOrchestrator:
                     db_finding = db_models.FindingRecord(**finding.model_dump())
                     self.db.add(db_finding)
                     await self.db.commit()
+
+                    # Email alert for critical/high findings
+                    if analysis.vulnerable and analysis.severity in ("critical", "high") and self.notify_email:
+                        asyncio.create_task(send_critical_finding_alert(
+                            to=self.notify_email,
+                            company_name=request.company_name,
+                            audit_id=audit_id,
+                            attack_name=attack["name"],
+                            severity=analysis.severity,
+                            explanation=analysis.explanation,
+                        ))
 
                     completed += 1
                     if progress_callback:
@@ -177,6 +207,18 @@ class AuditOrchestrator:
                     percent=100.0,
                     scanner="complete",
                     message=f"Audit complete. Risk score: {risk_score}/100 ({risk_level})",
+                ))
+
+            # Send audit complete email notification
+            if self.notify_email:
+                asyncio.create_task(send_audit_complete_alert(
+                    to=self.notify_email,
+                    company_name=request.company_name,
+                    audit_id=audit_id,
+                    risk_score=risk_score,
+                    risk_level=risk_level,
+                    total_tests=total,
+                    vulnerabilities_found=vuln_count,
                 ))
 
         except Exception as exc:

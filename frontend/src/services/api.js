@@ -1,8 +1,13 @@
 const BASE = '/api'
 
+function _authHeaders() {
+  const token = localStorage.getItem('llm_audit_token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 async function request(path, options = {}) {
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: { 'Content-Type': 'application/json', ..._authHeaders(), ...options.headers },
     ...options,
   })
   if (!res.ok) {
@@ -30,7 +35,25 @@ export const api = {
 
   getReportUrl: (id) => `${BASE}/reports/${id}/html`,
 
+  getExportUrl: (id, format) => `${BASE}/audits/${id}/export/${format}`,
+
   health: () => request('/health'),
+
+  // ── Auth ──────────────────────────────────────────────────────────
+  register: (data) =>
+    request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+
+  login: (data) =>
+    request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+
+  getMe: () => request('/auth/me'),
+
+  getAuthStatus: () => request('/auth/status'),
+
+  // ── Templates ─────────────────────────────────────────────────────
+  listTemplates: () => request('/templates/'),
+
+  getTemplate: (id) => request(`/templates/${id}`),
 }
 
 // ── WebSocket ──────────────────────────────────────────────────────

@@ -9,7 +9,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from backend.api.routes import audit, health, reports
-from backend.db.database import init_db
+from backend.api.routes import auth as auth_routes
+from backend.api.routes import export as export_routes
+from backend.api.routes import templates as template_routes
+from backend.core.scheduler import load_all_schedules, start_scheduler, stop_scheduler
+from backend.db.database import AsyncSessionLocal, init_db
 from backend.utils.config import settings
 from backend.utils.logger import get_logger
 
@@ -21,7 +25,14 @@ async def lifespan(app: FastAPI):
     logger.info("Starting %s v%s", settings.APP_NAME, settings.APP_VERSION)
     await init_db()
     logger.info("Database initialised")
+
+    start_scheduler()
+    async with AsyncSessionLocal() as session:
+        await load_all_schedules(session)
+
     yield
+
+    stop_scheduler()
     logger.info("Shutting down")
 
 
@@ -51,6 +62,9 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api")
 app.include_router(audit.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
+app.include_router(auth_routes.router)
+app.include_router(export_routes.router)
+app.include_router(template_routes.router)
 
 
 @app.get("/api")
