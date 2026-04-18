@@ -10,7 +10,7 @@ from typing import List
 
 from jinja2 import Environment, FileSystemLoader
 
-from backend.utils.config import settings
+from utils.config import settings
 
 _TEMPLATE_DIR = Path(__file__).parent / "templates"
 _env = Environment(loader=FileSystemLoader(str(_TEMPLATE_DIR)), autoescape=True)

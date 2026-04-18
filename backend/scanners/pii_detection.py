@@ -7,7 +7,7 @@ from its training data, RAG store, or conversation history.
 
 from typing import Any, Dict, List
 
-from backend.scanners.base import BaseScanner
+from scanners.base import BaseScanner
 
 
 class PIIDetectionScanner(BaseScanner):

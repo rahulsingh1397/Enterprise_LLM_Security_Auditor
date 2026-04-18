@@ -9,26 +9,27 @@ from typing import AsyncGenerator, Callable, List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.analyzer import analyze_response
-from backend.core.dynamic_attacks import generate_dynamic_attacks
-from backend.core.llm_client import TargetLLMClient
-from backend.core.risk_scorer import (
+from core.analyzer import analyze_response
+from core.dynamic_attacks import generate_dynamic_attacks
+from core.llm_client import TargetLLMClient
+from core.risk_scorer import (
     calculate_risk_score,
     generate_executive_summary,
     get_risk_level,
 )
-from backend.db import models as db_models
-from backend.models.audit import AuditCreateRequest, ProgressEvent
-from backend.models.vulnerability import FindingCreate
-from backend.scanners.data_leakage import DataLeakageScanner
-from backend.scanners.jailbreak import JailbreakScanner
-from backend.scanners.pii_detection import PIIDetectionScanner
-from backend.scanners.prompt_injection import PromptInjectionScanner
-from backend.scanners.rag_security import RAGSecurityScanner
-from backend.scanners.system_prompt import SystemPromptScanner
-from backend.utils.config import settings
-from backend.utils.email import send_audit_complete_alert, send_critical_finding_alert
-from backend.utils.logger import get_logger
+from db import models as db_models
+from models.audit import AuditCreateRequest, ProgressEvent
+from models.vulnerability import FindingCreate
+from scanners.data_leakage import DataLeakageScanner
+from scanners.jailbreak import JailbreakScanner
+from scanners.pii_detection import PIIDetectionScanner
+from scanners.prompt_injection import PromptInjectionScanner
+from scanners.rag_security import RAGSecurityScanner
+from scanners.system_prompt import SystemPromptScanner
+from scanners.encoding_obfuscation import EncodingObfuscationScanner
+from utils.config import settings
+from utils.email import send_audit_complete_alert, send_critical_finding_alert
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -39,6 +40,7 @@ _SCANNER_REGISTRY = {
     "jailbreak": JailbreakScanner,
     "pii_exposure": PIIDetectionScanner,
     "rag_security": RAGSecurityScanner,
+    "encoding_obfuscation": EncodingObfuscationScanner,
 }
 
 

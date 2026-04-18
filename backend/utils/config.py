@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     NOTIFY_ON_CRITICAL: bool = True
 
     # ── Dynamic attack generation ────────────────────────────────────────────
-    DYNAMIC_ATTACKS_ENABLED: bool = False   # Uses extra Claude API calls
+    DYNAMIC_ATTACKS_ENABLED: bool = True   # Uses extra Claude API calls
     DYNAMIC_ATTACKS_PER_SCAN: int = 5
 
     # ── Encryption key for sensitive DB fields ───────────────────────────────

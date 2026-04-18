@@ -8,14 +8,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.api.routes import audit, health, reports
-from backend.api.routes import auth as auth_routes
-from backend.api.routes import export as export_routes
-from backend.api.routes import templates as template_routes
-from backend.core.scheduler import load_all_schedules, start_scheduler, stop_scheduler
-from backend.db.database import AsyncSessionLocal, init_db
-from backend.utils.config import settings
-from backend.utils.logger import get_logger
+from api.routes import audit, health, reports
+from api.routes import auth as auth_routes
+from api.routes import export as export_routes
+from api.routes import templates as template_routes
+from core.scheduler import load_all_schedules, start_scheduler, stop_scheduler
+from db.database import AsyncSessionLocal, init_db
+from utils.config import settings
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 

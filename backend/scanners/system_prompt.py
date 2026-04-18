@@ -6,7 +6,7 @@ Tests whether the target LLM reveals its system prompt or configuration.
 
 from typing import Any, Dict, List
 
-from backend.scanners.base import BaseScanner
+from scanners.base import BaseScanner
 
 
 class SystemPromptScanner(BaseScanner):

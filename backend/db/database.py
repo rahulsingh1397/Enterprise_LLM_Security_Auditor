@@ -5,7 +5,7 @@ Async SQLAlchemy database setup.
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
-from backend.utils.config import settings
+from utils.config import settings
 
 engine = create_async_engine(
     settings.DATABASE_URL,
@@ -39,5 +39,10 @@ async def get_db() -> AsyncSession:
 async def init_db() -> None:
     """Create all tables on startup."""
     async with engine.begin() as conn:
-        from backend.db import models  # noqa: F401 — registers ORM models
+        from db import models  # noqa: F401 - registers ORM models
         await conn.run_sync(Base.metadata.create_all)
+
+
+def get_session() -> AsyncSession:
+    """Get a database session (synchronous for FastAPI dependency)."""
+    return AsyncSessionLocal()

@@ -7,7 +7,7 @@ can override the model's safety and operational constraints.
 
 from typing import Any, Dict, List
 
-from backend.scanners.base import BaseScanner
+from scanners.base import BaseScanner
 
 
 class JailbreakScanner(BaseScanner):

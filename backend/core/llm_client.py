@@ -8,8 +8,8 @@ from typing import Optional
 
 import httpx
 
-from backend.models.audit import TargetConfig
-from backend.utils.logger import get_logger
+from models.audit import TargetConfig
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 

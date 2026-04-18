@@ -7,9 +7,9 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.db.database import get_db
-from backend.db import models as db_models
-from backend.reports.generator import generate_html_report
+from db.database import get_db
+from db import models as db_models
+from reports.generator import generate_html_report
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 

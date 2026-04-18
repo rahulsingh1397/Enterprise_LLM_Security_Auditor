@@ -7,7 +7,7 @@ Higher score = more vulnerable.
 
 from typing import List
 
-from backend.models.vulnerability import FindingBase
+from models.vulnerability import FindingBase
 
 # Weight per severity (max possible per finding)
 SEVERITY_WEIGHTS = {

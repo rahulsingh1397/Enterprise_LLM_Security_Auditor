@@ -4,7 +4,7 @@ Audit templates API — list and get pre-built audit configurations.
 
 from fastapi import APIRouter, HTTPException
 
-from backend.utils.templates import get_template, list_templates
+from utils.templates import get_template, list_templates
 
 router = APIRouter(prefix="/api/templates", tags=["templates"])
 

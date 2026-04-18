@@ -15,8 +15,8 @@ from fastapi.responses import Response, StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.db.database import get_session
-from backend.db.models import AuditRecord, FindingRecord
+from db.database import get_session
+from db.models import AuditRecord, FindingRecord
 
 router = APIRouter(prefix="/api/audits", tags=["export"])
 

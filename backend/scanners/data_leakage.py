@@ -7,7 +7,7 @@ or proprietary knowledge it should not disclose.
 
 from typing import Any, Dict, List
 
-from backend.scanners.base import BaseScanner
+from scanners.base import BaseScanner
 
 
 class DataLeakageScanner(BaseScanner):

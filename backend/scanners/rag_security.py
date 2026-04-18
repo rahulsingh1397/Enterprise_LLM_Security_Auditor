@@ -7,7 +7,7 @@ unauthorized document retrieval, and indirect injection via retrieved context.
 
 from typing import Any, Dict, List
 
-from backend.scanners.base import BaseScanner
+from scanners.base import BaseScanner
 
 
 class RAGSecurityScanner(BaseScanner):

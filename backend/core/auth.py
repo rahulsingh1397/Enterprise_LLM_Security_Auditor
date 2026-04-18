@@ -12,9 +12,9 @@ from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.db.database import get_session
-from backend.db.models import UserRecord
-from backend.utils.config import settings
+from db.database import get_session
+from db.models import UserRecord
+from utils.config import settings
 
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 _bearer = HTTPBearer(auto_error=False)

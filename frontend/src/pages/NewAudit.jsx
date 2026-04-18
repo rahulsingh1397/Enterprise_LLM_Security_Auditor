@@ -53,7 +53,7 @@ export default function NewAudit() {
   const totalTests = SCAN_CATEGORIES
     .filter(c => form.scan_categories.includes(c.id))
     .reduce((s, c) => {
-      const counts = { prompt_injection: 12, system_prompt_leakage: 10, data_leakage: 10, jailbreak: 10, pii_exposure: 9, rag_security: 10 }
+      const counts = { prompt_injection: 12, system_prompt_leakage: 10, data_leakage: 10, jailbreak: 10, pii_exposure: 9, rag_security: 10, encoding_obfuscation: 6 }
       return s + (counts[c.id] ?? 0)
     }, 0)
 

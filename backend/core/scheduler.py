@@ -11,10 +11,10 @@ from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.db.database import AsyncSessionLocal
-from backend.db.models import AuditRecord, ScheduledAuditRecord
-from backend.models.audit import AuditCreateRequest, TargetConfig
-from backend.utils.config import settings
+from db.database import AsyncSessionLocal
+from db.models import AuditRecord, ScheduledAuditRecord
+from models.audit import AuditCreateRequest, TargetConfig
+from utils.config import settings
 
 logger = logging.getLogger(__name__)
 

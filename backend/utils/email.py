@@ -6,7 +6,7 @@ Sends alerts when critical vulnerabilities are found.
 import logging
 from typing import Optional
 
-from backend.utils.config import settings
+from utils.config import settings
 
 logger = logging.getLogger(__name__)
 

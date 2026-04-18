@@ -6,7 +6,7 @@ import logging
 import sys
 from typing import Any
 
-from backend.utils.config import settings
+from utils.config import settings
 
 
 def get_logger(name: str) -> logging.Logger:

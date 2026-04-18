@@ -11,13 +11,13 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, WebSocke
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.scanner import AuditOrchestrator
-from backend.db.database import AsyncSessionLocal, get_db
-from backend.db import models as db_models
-from backend.models.audit import AuditBrief, AuditCreateRequest, AuditDetail, ProgressEvent
-from backend.models.vulnerability import FindingOut
-from backend.utils.config import settings
-from backend.utils.logger import get_logger
+from core.scanner import AuditOrchestrator
+from db.database import AsyncSessionLocal, get_db
+from db import models as db_models
+from models.audit import AuditBrief, AuditCreateRequest, AuditDetail, ProgressEvent
+from models.vulnerability import FindingOut
+from utils.config import settings
+from utils.logger import get_logger
 
 router = APIRouter(prefix="/audits", tags=["audits"])
 logger = get_logger(__name__)

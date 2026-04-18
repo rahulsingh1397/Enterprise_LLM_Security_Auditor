@@ -9,15 +9,15 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.auth import (
+from core.auth import (
     create_access_token,
     get_current_user,
     hash_password,
     verify_password,
 )
-from backend.db.database import get_session
-from backend.db.models import AuditLog, UserRecord
-from backend.utils.config import settings
+from db.database import get_session
+from db.models import AuditLog, UserRecord
+from utils.config import settings
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 

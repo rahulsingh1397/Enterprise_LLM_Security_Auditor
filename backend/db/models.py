@@ -8,7 +8,7 @@ from datetime import datetime
 from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from backend.db.database import Base
+from db.database import Base
 
 
 def _uuid() -> str:
