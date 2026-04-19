@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
 
 const SCAN_CATEGORIES = [
-  { id: 'prompt_injection',    icon: '💉', label: 'Prompt Injection',     desc: '12 instruction-override attacks' },
-  { id: 'system_prompt_leakage', icon: '🔓', label: 'System Prompt Leakage', desc: '10 context-extraction probes' },
-  { id: 'data_leakage',        icon: '📤', label: 'Data Leakage',         desc: '10 knowledge-base extraction tests' },
-  { id: 'jailbreak',           icon: '🎭', label: 'Jailbreak Attacks',    desc: '10 persona/mode bypass attacks' },
-  { id: 'pii_exposure',        icon: '👤', label: 'PII Exposure',         desc: '9 personal data extraction probes' },
-  { id: 'rag_security',        icon: '📚', label: 'RAG Security',         desc: '10 retrieval-store vulnerability tests' },
+  { id: 'prompt_injection',    icon: '', label: 'Prompt Injection',     desc: '12 instruction-override attacks' },
+  { id: 'system_prompt_leakage', icon: '', label: 'System Prompt Leakage', desc: '10 context-extraction probes' },
+  { id: 'data_leakage',        icon: '', label: 'Data Leakage',         desc: '10 knowledge-base extraction tests' },
+  { id: 'jailbreak',           icon: '', label: 'Jailbreak Attacks',    desc: '10 persona/mode bypass attacks' },
+  { id: 'pii_exposure',        icon: '', label: 'PII Exposure',         desc: '9 personal data extraction probes' },
+  { id: 'rag_security',        icon: '', label: 'RAG Security',         desc: '10 retrieval-store vulnerability tests' },
+  { id: 'encoding_obfuscation', icon: '', label: 'Encoding & Obfuscation', desc: '6 cipher/encoding bypass attacks' },
 ]
 
 const PROVIDERS = [
